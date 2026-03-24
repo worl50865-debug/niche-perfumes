@@ -1,4 +1,4 @@
-name: Scrape Women CAT3 – 1 group(s)
+name: Pipeline Women CAT3 – 1 group(s)
 
 on:
   schedule:
