@@ -59,12 +59,16 @@ class BoutiqaatDataPipeline:
                 f"Processing {len(SUBCATEGORY_URLS)} subcategories "
                 f"(max 3 concurrent)"
             )
-            semaphore = asyncio.Semaphore(3)
-            tasks = [
-                self._process_url_async(semaphore, url)
-                for url in SUBCATEGORY_URLS
-            ]
-            results = asyncio.run(asyncio.gather(*tasks, return_exceptions=True))
+
+            async def _run_all():
+                semaphore = asyncio.Semaphore(3)
+                tasks = [
+                    self._process_url_async(semaphore, url)
+                    for url in SUBCATEGORY_URLS
+                ]
+                return await asyncio.gather(*tasks, return_exceptions=True)
+
+            results = asyncio.run(_run_all())
 
             successful = sum(1 for r in results if r is True)
             failed = len(results) - successful
