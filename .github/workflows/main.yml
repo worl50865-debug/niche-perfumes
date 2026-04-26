@@ -31,7 +31,7 @@ jobs:
 
       - name: Install Playwright browsers
         run: |
-          playwright install chromium
+          playwright install --with-deps chromium
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2

@@ -94,10 +94,30 @@ class BoutiqaatScraper:
             logger.info(f"Fetching with Playwright: {url}")
             
             with sync_playwright() as p:
-                browser = p.chromium.launch(headless=True)
+                browser = p.chromium.launch(
+                    headless=True,
+                    args=[
+                        '--no-sandbox',
+                        '--disable-dev-shm-usage',
+                        '--disable-blink-features=AutomationControlled',
+                    ]
+                )
                 page = browser.new_page()
-                
-                page.goto(url, wait_until='load', timeout=90000)
+                page.set_extra_http_headers({
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Accept-Language': 'ar,en-US;q=0.9,en;q=0.8',
+                })
+
+                # Retry goto up to 3 times with increasing timeout
+                for _attempt in range(3):
+                    try:
+                        page.goto(url, wait_until='domcontentloaded', timeout=60000 + _attempt * 30000)
+                        break
+                    except Exception as _goto_err:
+                        if _attempt == 2:
+                            raise
+                        logger.warning(f"Goto attempt {_attempt + 1} failed: {_goto_err}. Retrying...")
+                        time.sleep(5)
                 
                 # Only apply infinite scroll logic for product listing pages (URLs with /l/)
                 if '/l/' in url:
